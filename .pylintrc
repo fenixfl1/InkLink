@@ -1,0 +1,9 @@
+[BASIC]
+python = 3.12
+
+[BASIC]
+py3k = True
+
+[pycodestyle]
+max-line-length = 100
+
