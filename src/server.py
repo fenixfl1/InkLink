@@ -1,6 +1,7 @@
 import signal
 import asyncio
 import json
+import subprocess
 import websockets
 import requests
 
@@ -8,6 +9,7 @@ from src.utils.printer import print_document
 from src.utils.helpers import generateid, get_file_logger
 from src.config.default import (
     DEFAULT_PRINTER,
+    ROOT_DIR,
     TMP_DIR,
     WEBSOCKET_HOST,
     WEBSOCKET_PORT,
@@ -37,7 +39,7 @@ async def handle_websocket(websocket, path):
     try:
         async for message in websocket:
             data = json.loads(message)
-            rp_name = f"{data.get("rp_name", f"{generateid()}")}.pdf" 
+            rp_name = f"{data.get('rp_name', f'{generateid()}')}.pdf"
             await download_and_print_pdf(data["url"], rp_name)
     except websockets.exceptions.ConnectionClosed as e:
         logger.error(f" Connection closed - {e}")
@@ -46,26 +48,13 @@ async def handle_websocket(websocket, path):
 async def start_server():
     print(f"Starting server at ws://{WEBSOCKET_HOST}:{WEBSOCKET_PORT}")
     print("Waiting for clients to connect...\n")
+
+    # delete the contnet of the tmp directory (windows)
+    subprocess.run(["del", "/Q", f"{TMP_DIR}\\*"], shell=True)
+
     server = await websockets.serve(handle_websocket, WEBSOCKET_HOST, WEBSOCKET_PORT)
 
     await server.wait_closed()
 
-
-def stop_server(signal_received, frame):
-    stop_server: str = ""
-
-    while stop_server.lower() not in ["y", "n"]:
-        stop_server = input("Do you want to stop the server? (y/n):")
-
-    if stop_server.lower() == "y":
-        print("Server stopped")
-        exit()
-    if stop_server.lower() == "n":
-        print("\033[H\033[J")
-        print(f"Starting server at ws://{WEBSOCKET_HOST}:{WEBSOCKET_PORT}")
-        print("Waiting for clients to connect...\n")
-        
-        
-signal.signal(signal.SIGINT, stop_server)
 
 asyncio.run(start_server())

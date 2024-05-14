@@ -10,6 +10,9 @@ ROOT_DIR = os.path.abspath(os.path.join(CURRENT_DIR, os.pardir))
 
 TMP_DIR = os.path.join(ROOT_DIR, "tmp")
 FILE_LOG_PATH = os.path.join(ROOT_DIR, "logs")
+PDF_VIEWER_FOLDER = os.path.join(ROOT_DIR, "SumatraPDF")
+PDF_VIEWER_PATH = os.path.join(PDF_VIEWER_FOLDER, "SumatraPDF.exe")
+PDF_VIEWER_TEMP_FOLDER = os.path.join(PDF_VIEWER_FOLDER, "sumatrapdfcache")
 
 load_dotenv(".env.local")
 
