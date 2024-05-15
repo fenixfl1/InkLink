@@ -4,16 +4,18 @@ __pycache__/
 *$py.class
 
 # C extensions
-*.so
+*.so*
+!.gitignore
 
 __pycache__
 env
 .cpqdevkit
 .vscode
 .env.local
-logs
-# ignore all inside tmp folder but not itself
+logs/*
 tmp/*
+!logs/.gitkeep
+!tmp/.gitkeep
 
 # Distribution / packaging
 .Python
