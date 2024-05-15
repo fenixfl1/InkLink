@@ -10,6 +10,7 @@ __pycache__
 env
 .cpqdevkit
 .vscode
+.env.local
 logs
 # ignore all inside tmp folder but not itself
 tmp/*
