@@ -1,16 +1,14 @@
-import signal
 import asyncio
 import json
 import subprocess
 import websockets
-import requests
 
 from src.utils.printer import (
     get_default_printer,
     print_document,
     get_available_printers,
 )
-from src.utils.helpers import download_document, generateid, get_file_logger
+from src.utils.helpers import download_document, get_file_logger
 from src.config.default import (
     TMP_DIR,
     WEBSOCKET_HOST,
@@ -48,8 +46,8 @@ async def start_server():
     print(f"Starting server at ws://{WEBSOCKET_HOST}:{WEBSOCKET_PORT}")
     print("Waiting for clients to connect...\n")
 
-    # delete the contnet of the tmp directory (windows)
-    subprocess.run(["del", "/Q", f"{TMP_DIR}\\*"], shell=True)
+    # delete the contnet of the tmp directory (windows) solo los archivos pdf
+    subprocess.run(["del", "/Q", f"{TMP_DIR}\\*.pdf"], shell=True)
 
     server = await websockets.serve(handle_websocket, WEBSOCKET_HOST, WEBSOCKET_PORT)
 
