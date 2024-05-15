@@ -5,11 +5,13 @@ import subprocess
 import websockets
 import requests
 
-from src.utils.printer import print_document
-from src.utils.helpers import generateid, get_file_logger
+from src.utils.printer import (
+    get_default_printer,
+    print_document,
+    get_available_printers,
+)
+from src.utils.helpers import download_document, generateid, get_file_logger
 from src.config.default import (
-    DEFAULT_PRINTER,
-    ROOT_DIR,
     TMP_DIR,
     WEBSOCKET_HOST,
     WEBSOCKET_PORT,
@@ -18,29 +20,26 @@ from src.config.default import (
 logger = get_file_logger(__name__, "server.log")
 
 
-async def download_and_print_pdf(url: str, file_name: str = None):
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            file_path = f"{TMP_DIR}\\{file_name}"
-
-            with open(file_path, "wb") as f:
-                f.write(response.content)
-
-            print_document(file_path, DEFAULT_PRINTER)
-        else:
-            print(f"Failed to download PDF from {url}")
-    except Exception as e:
-        logger.error(f"An error occurred while downloading the PDF - {e}")
-
-
 async def handle_websocket(websocket, path):
-    print(f"Client connected")
     try:
+        printers = get_available_printers()
+
+        await websocket.send(
+            json.dumps(
+                {
+                    "message": "Connected to the server",
+                    "printers": printers,
+                    "default": get_default_printer(),
+                }
+            )
+        )
+
         async for message in websocket:
             data = json.loads(message)
-            rp_name = f"{data.get('rp_name', f'{generateid()}')}.pdf"
-            await download_and_print_pdf(data["url"], rp_name)
+            printer = data.get("printer", None)
+            file_path = await download_document(data["url"])
+
+            print_document(file_path, printer)
     except websockets.exceptions.ConnectionClosed as e:
         logger.error(f" Connection closed - {e}")
 

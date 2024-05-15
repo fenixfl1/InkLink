@@ -8,7 +8,7 @@ from src.utils.helpers import get_file_logger
 logger = get_file_logger(__name__, "printer.log")
 
 
-def find_available_printers() -> list:
+def get_available_printers() -> list:
     try:
         return [
             printer[2]
@@ -21,9 +21,17 @@ def find_available_printers() -> list:
         return []
 
 
+def get_default_printer() -> str:
+    try:
+        return win32print.GetDefaultPrinter()
+    except Exception as e:
+        logger.error(f"An error occurred while fetching the default printer - {e}")
+        return ""
+
+
 def verify_printer_status() -> bool:
     # validate if the printer is available
-    if not find_available_printers():
+    if not get_available_printers():
         print("No printer available")
         return False
 
