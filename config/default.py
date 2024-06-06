@@ -17,7 +17,7 @@ def resource_path(relative_path):
 
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 CONFIT_PATH = "config.ini"
-TMP_DIR = resource_path("/tmp")
+TMP_DIR = resource_path(f"{ROOT_DIR}\\tmp")
 
 if not os.path.exists(TMP_DIR):
     os.makedirs(TMP_DIR)

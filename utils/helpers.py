@@ -2,9 +2,9 @@ import logging
 import os
 import sys
 import uuid
-import requests
+import aiohttp
+import aiofiles
 
-from config import ROOT_DIR
 from config.default import FILE_LOGGER_HANDLER, TMP_DIR
 
 
@@ -40,20 +40,23 @@ def get_file_logger(name: str) -> logging.Logger:
 logger = get_file_logger(__name__)
 
 
-def download_document(url: str) -> str:
+async def download_document(url: str) -> str:
     try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            file_path = resource_path(f"{TMP_DIR}\\{generateid()}.pdf")
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    file_path = resource_path(f"{TMP_DIR}\\{generateid()}.pdf")
 
-            with open(file_path, "wb") as f:
-                f.write(response.content)
+                    async with aiofiles.open(file_path, "wb") as f:
+                        await f.write(await response.read())
 
-            return file_path
-        else:
-            print(f"Failed to download PDF from {url}")
-    except Exception as e:
-        logger.error(f"An error occurred while downloading the PDF - {e}")
+                    return file_path
+                else:
+                    raise Exception(
+                        f"Failed to download PDF from {url}.\n {response.status} - {response.reason}"
+                    )
+    except Exception as error:
+        logger.error(f"{error}")
         return ""
 
 

@@ -1,57 +1,54 @@
-[BASIC]
-python = 3.12
-
-[BASIC]
-py3k = True
-
-[pycodestyle]
-max-line-length = 100
-
 [MASTER]
-
-ignore = __test__/*
-# Specify the Python version for which Pylint should be applied
-; python=3.10
+# A comma-separated list of package or module names from where C extensions may be loaded.
+extension-pkg-whitelist=cv2
+# Add files or directories to the blacklist. They should be base names, not paths.
+ignore=CVS
 
 [MESSAGES CONTROL]
-# Disable specific warnings or errors
-disable=
-    missing-docstring,
-    invalid-name,
-    unused-import
-
-
-[FORMAT]
-# Set the maximum line length
-max-line-length=120
-
-
-[TYPECHECK]
-# Set the maximum number of arguments for function / method
-; max-args=8
-# Set the maximum number of locals for function / method body
-; max-locals=15
-# Set the maximum number of return / yield for function / method body
-; max-returns=6
-# Set the maximum number of branch for function / method body
-; max-branches=12
-# Set the maximum number of statements in function / method body
-; max-statements=50
-# Set the maximum number of parents for a class (see R0901).
-; max-parents=3
-
+# Disable the message, report, category or checker with the given id(s).
+disable=C0111,  # missing-docstring
+        W0718, # catching too general exception Exception
+        
 [REPORTS]
+# Set the output format. Available formats are text, parseable, colorized, json and msvs
+output-format=colorized
 
-# Set the output format. Available formats are text, parseable, colorized, msvs (visual studio) and html
-output-format=json
+[REFACTORING]
+# Maximum number of nested blocks for function / method body
+max-nested-blocks=5
 
-
-[VARIABLES]
-# Enables checking for unused variables / arguments
-init-import=no
-
-; [MESSAGES CONTROL]
+[LOGGING]
+# Format style used to check logging format string. `old` means using % formatting, `new` means using str.format() formatting, and `fstr` means using f-strings
+logging-format-style=old
 
 [BASIC]
-min-public-methods=50
+# Argument names should be lowercased, with underscores, and 2 to 30 chars
+argument-rgx=[a-z_][a-z0-9_]{1,29}$
+# Class attribute names
+class-attribute-rgx=[a-z_][a-z0-9_]{1,30}$
+# Class names should be in CamelCase
+class-rgx=[A-Z_][a-zA-Z0-9]+$
+# Function names should be in snake_case
+function-rgx=[a-z_][a-z0-9_]{2,30}$
+# Method names should be in snake_case
+method-rgx=[a-z_][a-z0-9_]{2,30}$
 
+[DESIGN]
+# Maximum number of arguments for function / method
+max-args=5
+# Maximum number of attributes for a class (see R0902).
+max-attributes=10
+# Maximum number of public methods for a class (see R0904).
+max-public-methods=20
+
+[FORMAT]
+# Maximum number of characters on a single line.
+max-line-length=100
+# Regexp for a line that is allowed to be longer than the limit.
+ignore-long-lines=^\s*(# )?<?https?://\S+>?$
+
+[TYPECHECK]
+# warning if use ald for formatting string
+format-style=fstr
+# use fstr for logging format string
+logging-format-style=fstr

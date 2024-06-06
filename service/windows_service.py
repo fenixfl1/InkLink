@@ -1,16 +1,14 @@
 import asyncio
 import socket
 import sys
-import os
-import win32serviceutil
+import threading
+import time
 import servicemanager
 import win32event
 import win32service
-import time
-import threading
+import win32serviceutil
 
 from config import SERVICE_DISPLAY_NAME, SERVICE_NAME, SERVICE_DESCRIPTION
-from config.default import resource_path
 from utils.helpers import get_file_logger, post_service_update
 from server import start_server
 

@@ -1,6 +1,7 @@
 import subprocess
 import os
 import win32print
+import asyncio
 
 from utils.helpers import get_file_logger
 
@@ -18,36 +19,33 @@ class PrinterUtilities:
     def get_printer_name(self):
         return self.__printer_name
 
-    def print_file(self, file_path: str, printer_name: str = None):
+    async def print_file(self, file_path: str, printer_name: str = None, *print_args):
         try:
-            if printer_name:
-                self.set_printer_name(printer_name)
+            # get the default printer or the printer name passed as argument
+            printer_name = printer_name or win32print.GetDefaultPrinter()
 
-            if not self.get_printer_name():
-                raise ValueError("Printer name is not set")
+            command = f'-print-to /D:"{printer_name}" {file_path}'
 
-            if not os.path.exists(file_path):
-                raise FileNotFoundError("File not found")
+            process = await asyncio.create_subprocess_shell(
+                command,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
 
-            # print the file using win32print module
-            hPrinter = win32print.OpenPrinter(self.get_printer_name())
-            try:
-                hJob = win32print.StartDocPrinter(
-                    hPrinter, 1, ("test of raw data", None, "RAW")
+            stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                logger.error(
+                    f"An error occurred while printing the document - {stderr}"
                 )
-                try:
-                    win32print.StartPagePrinter(hPrinter)
-                    with open(file_path, "rb") as f:
-                        win32print.WritePrinter(hPrinter, f.read())
-                    win32print.EndPagePrinter(hPrinter)
-                finally:
-                    win32print.EndDocPrinter(hPrinter)
-            finally:
-                win32print.ClosePrinter(hPrinter)
-        except Exception as e:
-            logger.error(f"An error occurred while printing the file - {e}")
+                raise subprocess.CalledProcessError(process.returncode, command)
+
+            logger.info(f"Print job completed successfully: {stdout.decode()}")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"An error occurred while printing the document - {e}")
         finally:
             pass
+            # subprocess.run(["del", "/Q", PDF_VIEWER_TEMP_FOLDER], shell=True)
 
     def get_printer_list(self) -> list[str]:
         try:

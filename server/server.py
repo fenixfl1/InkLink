@@ -1,9 +1,10 @@
 import json
 import websockets
+import asyncio
 
 from config import WEBSOCKET_HOST, WEBSOCKET_PORT
 from config.default import CONFIT_PATH
-from utils.helpers import get_file_logger
+from utils.helpers import download_document, get_file_logger
 from utils.printer import PrinterUtilities
 
 logger = get_file_logger(__name__)
@@ -18,15 +19,40 @@ async def error_handler(websocket, path, error):
     logger.error(f"Error in connection from {path}: {error}")
 
 
-async def websocket_handler(websocket, path):
+async def handle_printing(
+    data: dict[str, str], websocket: websockets.WebSocketServerProtocol
+):
+    if not data or not isinstance(data, dict):
+        raise ValueError("Invalid data format")
+    if not data["url"]:
+        raise ValueError("Url not found in data")
+    if not data["printer"]:
+        raise ValueError("Printer not found in data")
+
+    url = data["url"]
+    copies = data.get("copies", 1)
+    printer_name = data["printer"]
+
+    file_path = await download_document(url)
+
+    await printer.print_file(file_path, printer_name)
+
+    await websocket.send(
+        json.dumps(
+            {
+                "type": "notification",
+                "message": "Printing completed successfully!",
+            }
+        )
+    )
+
+
+async def websocket_handler(websocket: websockets.WebSocketServerProtocol, path: str):
     print(f"New connection from {websocket.remote_address[0]}")
 
     try:
-        event = {
-            "type": "notification",
-            "message": "Connection established!",
-            "printers": printer.get_printer_list(),
-        }
+        event = {"type": "notification", "message": "Connection established!"}
+
         await websocket.send(json.dumps(event))
 
         async for message in websocket:
@@ -47,13 +73,7 @@ async def websocket_handler(websocket, path):
                     }
                     await websocket.send(json.dumps(event))
                 case "printing":
-                    if "data" not in data or not isinstance(data["data"], dict):
-                        raise ValueError("Invalid data format")
-                    event = {
-                        "type": "printing",
-                        "message": "Printing document...",
-                    }
-                    await websocket.send(json.dumps(event))
+                    await handle_printing(data, websocket)
                 case "command":
                     event = {
                         "type": "notification",
@@ -61,9 +81,7 @@ async def websocket_handler(websocket, path):
                     }
                     await websocket.send(json.dumps(event))
                 case _:
-                    raise ValueError(
-                        f"Invalid data type: {data['type']}. Supported types are: ping, status, printing, command"
-                    )
+                    raise ValueError(f"Invalid data type: {data['type']}.")
     except Exception as e:
         await error_handler(websocket, path, e)
 
