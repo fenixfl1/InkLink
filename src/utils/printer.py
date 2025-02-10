@@ -2,10 +2,10 @@ import win32print
 from PyPDF2 import PdfReader
 import subprocess
 
-from src.config.default import PDF_VIEWER_PATH, PDF_VIEWER_TEMP_FOLDER
+from config import PDF_VIEWER_PATH, PDF_VIEWER_TEMP_FOLDER, resource_path
 from src.utils.helpers import get_file_logger
 
-logger = get_file_logger(__name__, "printer.log")
+logger = get_file_logger(__name__)
 
 
 def get_available_printers() -> list:
@@ -42,6 +42,10 @@ def print_document(pdf_path, printer_name=None):
     try:
         # get the default printer or the printer name passed as argument
         printer_name = printer_name or win32print.GetDefaultPrinter()
+
+        print("*" * 75)
+        print(f"{PDF_VIEWER_PATH}")
+        print("*" * 75)
 
         subprocess.Popen(
             [

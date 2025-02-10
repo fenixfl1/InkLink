@@ -1,6 +1,5 @@
 import asyncio
 import json
-import subprocess
 import websockets
 
 from src.utils.printer import (
@@ -9,16 +8,17 @@ from src.utils.printer import (
     get_available_printers,
 )
 from src.utils.helpers import download_document, get_file_logger
-from src.config.default import (
-    TMP_DIR,
+from config import (
     WEBSOCKET_HOST,
     WEBSOCKET_PORT,
 )
 
-logger = get_file_logger(__name__, "server.log")
+logger = get_file_logger(__name__)
 
 
 async def handle_websocket(websocket, path):
+    print("Client connected")
+
     try:
         printers = get_available_printers()
 
@@ -35,7 +35,7 @@ async def handle_websocket(websocket, path):
         async for message in websocket:
             data = json.loads(message)
             printer = data.get("printer", None)
-            file_path = await download_document(data["url"])
+            file_path = download_document(data["url"])
 
             print_document(file_path, printer)
     except websockets.exceptions.ConnectionClosed as e:
@@ -46,12 +46,7 @@ async def start_server():
     print(f"Starting server at ws://{WEBSOCKET_HOST}:{WEBSOCKET_PORT}")
     print("Waiting for clients to connect...\n")
 
-    # delete the contnet of the tmp directory (windows) solo los archivos pdf
-    subprocess.run(["del", "/Q", f"{TMP_DIR}\\*.pdf"], shell=True)
-
     server = await websockets.serve(handle_websocket, WEBSOCKET_HOST, WEBSOCKET_PORT)
 
     await server.wait_closed()
 
-
-asyncio.run(start_server())

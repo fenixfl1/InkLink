@@ -3,7 +3,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import subprocess
 
-from src.config.default import ROOT_DIR
+from config import ROOT_DIR
 
 
 class WatchEventHandler(FileSystemEventHandler):

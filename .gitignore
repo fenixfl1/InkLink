@@ -13,9 +13,13 @@ env
 .vscode
 .env.local
 logs/*
+*.log*
 tmp/*
 !logs/.gitkeep
 !tmp/.gitkeep
+*.cfg*
+*.iss*
+*.exe*
 
 # Distribution / packaging
 .Python
