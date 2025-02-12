@@ -1,6 +1,7 @@
 import asyncio
 import json
 import websockets
+import time
 
 from src.utils.printer import (
     get_default_printer,
@@ -15,10 +16,16 @@ from config import (
 
 logger = get_file_logger(__name__)
 
+clients = {}
 
 async def handle_websocket(websocket, path):
-    print("Client connected")
-
+    client_id = f"{websocket.remote_address[0]}:{websocket.remote_address[1]}"
+    clients[client_id] = websocket
+    
+    print(f"Cliente {client_id} conectado.")
+    
+    message_id = f"print-{int(time.time() * 1000)}"
+    
     try:
         printers = get_available_printers()
 
@@ -26,20 +33,33 @@ async def handle_websocket(websocket, path):
             json.dumps(
                 {
                     "message": "Connected to the server",
-                    "printers": printers,
-                    "default": get_default_printer(),
+                    "messageId": message_id,
+                    "printers": {
+                        "default": get_default_printer(),
+                        "options": printers,
+                    }
                 }
             )
         )
 
         async for message in websocket:
-            data = json.loads(message)
-            printer = data.get("printer", None)
-            file_path = download_document(data["url"])
+            try:
+                data = json.loads(message)
+                printer = data.get("printer", None)
+                
+                file_paths = download_document(data["url"])
 
-            print_document(file_path, printer)
+                result = await print_document(file_paths, printer)
+                
+                result["messageId"] = data.get("messageId", message_id)
+            
+                await websocket.send(json.dumps(result))
+            except Exception as e:
+                logger.error(e)
+                await websocket.send(json.dumps({"status": "error", "message": str(e)}))
     except websockets.exceptions.ConnectionClosed as e:
         logger.error(f" Connection closed - {e}")
+        await websocket.send(json.dumps({"status": "error", "message": str(e)}))
 
 
 async def start_server():

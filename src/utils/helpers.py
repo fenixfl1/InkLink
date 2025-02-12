@@ -35,7 +35,7 @@ def get_file_logger(name: str) -> logging.Logger:
     return logger
 
 
-def generateid():
+def generateID():
     """
     Generate a unique id for the user.
     """
@@ -46,18 +46,46 @@ def generateid():
 logger = get_file_logger(__name__)
 
 
-def download_document(url: str) -> str:
+def download_document(urls: list[str]) -> list[str]:
+    """
+    Descarga documentos desde una lista de URLs y los guarda en TMP_DIR.
+    
+    :param urls: Lista de URLs de los documentos a descargar.
+    :return: Lista de rutas de los archivos descargados.
+    """
+    paths = []
+    for url in urls:
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                file_path = resource_path(f"{TMP_DIR}\\{generateID()}.pdf")
+
+                with open(file_path, "wb") as f:
+                    f.write(response.content)
+
+                paths.append(file_path)
+            else:
+                logger.warning(f"Failed to download PDF from {url} - Status code: {response.status_code}")
+        except Exception as e:
+            logger.error(f"An error occurred while downloading the PDF - {e}")
+    
+    return paths
+    
+async def _download_document(url: str) -> str:
     try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            file_path = resource_path(f"{TMP_DIR}\\{generateid()}.pdf")
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    file_path = resource_path(f"{TMP_DIR}\\{generateID()}.pdf")
+                    
+                    # Guardar el contenido del archivo de manera asincrónica
+                    with open(file_path, "wb") as f:
+                        f.write(await response.read())
 
-            with open(file_path, "wb") as f:
-                f.write(response.content)
-
-            return file_path
-        else:
-            print(f"Failed to download PDF from {url}")
+                    return file_path
+                else:
+                    print(f"Failed to download PDF from {url} with status code {response.status}")
+                    return ""
     except Exception as e:
         logger.error(f"An error occurred while downloading the PDF - {e}")
         return ""
@@ -72,7 +100,7 @@ def get_ip_address() -> str:
 def set_ip_address_as_cookie() -> bool:
     """
     This function sets the user IP address as a cookie tn the default browser.
-    In the CLIENT_HOST varibale, the host address is stored.
+    In the CLIENT_HOST variable, the host address is stored.
     """
     # get my local ip address
     ip = get_ip_address()
